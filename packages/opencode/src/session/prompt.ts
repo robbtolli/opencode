@@ -299,6 +299,26 @@ export namespace SessionPrompt {
       log.info("loop", { step, sessionID })
       if (abort.aborted) break
       let msgs = await MessageV2.filterCompacted(MessageV2.stream(sessionID))
+      // If this session is a thread, preload parent messages up to the fork point
+      const currentSession = session // from earlier in function scope
+      const parentID = currentSession?.parentID
+      const forkPoint = currentSession?.threadMessageID
+      if (parentID && forkPoint) {
+        try {
+          const parentSession = await Session.get(parentID)
+          if (parentSession && parentSession.threadMessageID === forkPoint) {
+            const parentMsgs = await MessageV2.filterCompacted(MessageV2.stream(parentID))
+            const allowed = parentMsgs.filter((m) => m.info.id < forkPoint)
+            msgs = [...allowed, ...msgs]
+          } else {
+            // Fallback: include all parent messages if fork point can't be determined
+            const parentMsgs = await MessageV2.filterCompacted(MessageV2.stream(parentID))
+            msgs = [...parentMsgs, ...msgs]
+          }
+        } catch {
+          // If parent cannot be loaded for any reason, fall back to current session's messages only
+        }
+      }
 
       let lastUser: MessageV2.User | undefined
       let lastAssistant: MessageV2.Assistant | undefined

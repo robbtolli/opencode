@@ -81,6 +81,8 @@ export const dict = {
   "command.session.compact.description": "Summarize the session to reduce context size",
   "command.session.fork": "Fork from message",
   "command.session.fork.description": "Create a new session from a previous message",
+  "command.session.thread": "Thread from message",
+  "command.session.thread.description": "Create a threaded conversation from a message",
   "command.session.share": "Share session",
   "command.session.share.description": "Share this session and copy the URL to clipboard",
   "command.session.unshare": "Unshare session",
@@ -294,6 +296,13 @@ export const dict = {
   "mcp.status.disabled": "disabled",
 
   "dialog.fork.empty": "No messages to fork from",
+  "dialog.thread.empty": "No messages to thread from",
+
+  "sidebar.tab.sessions": "Sessions",
+  "sidebar.tab.threads": "Threads",
+
+  "thread.panel.empty": "No messages to thread from",
+  "thread.panel.start": "Start a thread",
 
   "dialog.directory.search.placeholder": "Search folders",
   "dialog.directory.empty": "No folders found",

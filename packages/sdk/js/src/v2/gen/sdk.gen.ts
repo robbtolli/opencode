@@ -132,6 +132,8 @@ import type {
   SessionStatusResponses,
   SessionSummarizeErrors,
   SessionSummarizeResponses,
+  SessionThreadErrors,
+  SessionThreadResponses,
   SessionTodoErrors,
   SessionTodoResponses,
   SessionUnrevertErrors,
@@ -1250,6 +1252,43 @@ export class Session extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<SessionForkResponses, unknown, ThrowOnError>({
       url: "/session/{sessionID}/fork",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Thread session
+   *
+   * Create a new thread by forking an existing session at a specific message point and linking back to the original.
+   */
+  public thread<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      directory?: string
+      messageID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "query", key: "directory" },
+            { in: "body", key: "messageID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<SessionThreadResponses, SessionThreadErrors, ThrowOnError>({
+      url: "/session/{sessionID}/thread",
       ...options,
       ...params,
       headers: {

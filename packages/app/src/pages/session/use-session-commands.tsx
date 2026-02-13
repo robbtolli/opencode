@@ -15,6 +15,7 @@ import { DialogSelectFile } from "@/components/dialog-select-file"
 import { DialogSelectModel } from "@/components/dialog-select-model"
 import { DialogSelectMcp } from "@/components/dialog-select-mcp"
 import { DialogFork } from "@/components/dialog-fork"
+import { DialogThread } from "@/components/dialog-thread"
 import { showToast } from "@opencode-ai/ui/toast"
 import { findLast } from "@opencode-ai/util/array"
 import { extractPromptFromParts } from "@/utils/prompt"
@@ -351,6 +352,14 @@ export const useSessionCommands = (input: SessionCommandContext) => {
       slash: "fork",
       disabled: !input.params.id || input.visibleUserMessages().length === 0,
       onSelect: () => input.dialog.show(() => <DialogFork />),
+    }),
+    sessionCommand({
+      id: "session.thread",
+      title: input.language.t("command.session.thread"),
+      description: input.language.t("command.session.thread.description"),
+      slash: "thread",
+      disabled: !input.params.id || input.visibleUserMessages().length === 0,
+      onSelect: () => input.dialog.show(() => <DialogThread />),
     }),
   ])
 

@@ -355,6 +355,39 @@ export const SessionRoutes = lazy(() =>
       },
     )
     .post(
+      "/:sessionID/thread",
+      describeRoute({
+        summary: "Thread session",
+        description:
+          "Create a new thread by forking an existing session at a specific message point and linking back to the original.",
+        operationId: "session.thread",
+        responses: {
+          200: {
+            description: "Thread created",
+            content: {
+              "application/json": {
+                schema: resolver(Session.Info),
+              },
+            },
+          },
+          ...errors(400, 404),
+        },
+      }),
+      validator(
+        "param",
+        z.object({
+          sessionID: Session.thread.schema.shape.sessionID,
+        }),
+      ),
+      validator("json", z.object({ messageID: z.string() })),
+      async (c) => {
+        const sessionID = c.req.valid("param").sessionID
+        const body = c.req.valid("json")
+        const result = await Session.thread({ sessionID, messageID: body.messageID })
+        return c.json(result)
+      },
+    )
+    .post(
       "/:sessionID/abort",
       describeRoute({
         summary: "Abort session",

@@ -58,6 +58,7 @@ export namespace Session {
       projectID: z.string(),
       directory: z.string(),
       parentID: Identifier.schema("session").optional(),
+      threadMessageID: Identifier.schema("message").optional(),
       summary: z
         .object({
           additions: z.number(),
@@ -196,6 +197,30 @@ export namespace Session {
         }
       }
       return session
+    },
+  )
+
+  // Create a thread: fork the session at a given point and link back to the parent
+  export const thread = fn(
+    z.object({
+      sessionID: Identifier.schema("session"),
+      messageID: Identifier.schema("message"),
+    }),
+    async (input) => {
+      // 1) Fork the original session up to the given messageID
+      const forked = await fork({ sessionID: input.sessionID, messageID: input.messageID })
+      // 2) Mark the forked session as a thread of the original session
+      await update(
+        forked.id,
+        (draft) => {
+          draft.parentID = input.sessionID
+          draft.threadMessageID = input.messageID
+        },
+        { touch: true },
+      )
+      // 3) Return the updated forked session info
+      const updated = await get(forked.id)
+      return updated
     },
   )
 

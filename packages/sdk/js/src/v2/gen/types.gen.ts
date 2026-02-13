@@ -804,6 +804,7 @@ export type Session = {
   projectID: string
   directory: string
   parentID?: string
+  threadMessageID?: string
   summary?: {
     additions: number
     deletions: number
@@ -3215,6 +3216,41 @@ export type SessionForkResponses = {
 }
 
 export type SessionForkResponse = SessionForkResponses[keyof SessionForkResponses]
+
+export type SessionThreadData = {
+  body?: {
+    messageID: string
+  }
+  path: {
+    sessionID: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/session/{sessionID}/thread"
+}
+
+export type SessionThreadErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type SessionThreadError = SessionThreadErrors[keyof SessionThreadErrors]
+
+export type SessionThreadResponses = {
+  /**
+   * Thread created
+   */
+  200: Session
+}
+
+export type SessionThreadResponse = SessionThreadResponses[keyof SessionThreadResponses]
 
 export type SessionAbortData = {
   body?: never

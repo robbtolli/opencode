@@ -1,4 +1,4 @@
-import { createEffect, createMemo, Show, untrack } from "solid-js"
+import { createEffect, createMemo, Show, untrack, createSignal } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLocation, useNavigate } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -43,6 +43,7 @@ export function Titlebar() {
   const theme = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
+  const [threadsOpen, setThreadsOpen] = createSignal(false)
 
   const mac = createMemo(() => platform.platform === "desktop" && platform.os === "macos")
   const windows = createMemo(() => platform.platform === "desktop" && platform.os === "windows")
@@ -159,6 +160,14 @@ export function Titlebar() {
       onMouseDown={drag}
       onDblClick={maximize}
     >
+      <button
+        aria-label="Threads"
+        onClick={() => setThreadsOpen(!threadsOpen())}
+        style={{ position: "absolute", left: "8px", top: "6px" }}
+        class="ghost-button"
+      >
+        <Icon size="small" name="branch" />
+      </button>
       <div
         classList={{
           "flex items-center min-w-0": true,
@@ -260,6 +269,20 @@ export function Titlebar() {
           <div data-tauri-decorum-tb class="flex flex-row" />
         </Show>
       </div>
+
+      {/* Lightweight Threads panel (Phase 3 MVP) */}
+      <Show when={threadsOpen()}>
+        <div
+          class="absolute top-10 left-0 w-72 bg-background-base border border-border-weak-base rounded p-3 shadow z-10"
+          style={{ "pointer-events": "auto" }}
+        >
+          <div class="font-semibold mb-2">Threads</div>
+          <div class="text-xs text-text-weak mb-2">Threaded conversations panel (coming soon feature)</div>
+          <button class="text-xs" onClick={() => setThreadsOpen(false)}>
+            Close
+          </button>
+        </div>
+      </Show>
     </header>
   )
 }

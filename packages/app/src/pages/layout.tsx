@@ -77,6 +77,7 @@ import {
 import { workspaceOpenState } from "./layout/sidebar-workspace-helpers"
 import { ProjectDragOverlay, SortableProject, type ProjectSidebarContext } from "./layout/sidebar-project"
 import { SidebarContent } from "./layout/sidebar-shell"
+import { ThreadsPanel } from "@/components/threads-panel"
 
 export default function Layout(props: ParentProps) {
   const [store, setStore, , ready] = persisted(
@@ -1783,89 +1784,120 @@ export default function Layout(props: ParentProps) {
                 </div>
               </div>
 
+              {/* Tabs for Sessions vs Threads */}
+              <div class="shrink-0 px-3 py-2 border-b border-border-weak-base">
+                <div class="flex gap-1 bg-surface-base rounded-md p-1">
+                  <button
+                    class="flex-1 px-3 py-1.5 text-13-medium rounded transition-colors"
+                    classList={{
+                      "bg-background-base text-text-strong shadow-xs": layout.sidebarTab.active() === "sessions",
+                      "text-text-weak hover:text-text-base": layout.sidebarTab.active() !== "sessions",
+                    }}
+                    onClick={() => layout.sidebarTab.set("sessions")}
+                  >
+                    {language.t("sidebar.tab.sessions", { default: "Sessions" })}
+                  </button>
+                  <button
+                    class="flex-1 px-3 py-1.5 text-13-medium rounded transition-colors"
+                    classList={{
+                      "bg-background-base text-text-strong shadow-xs": layout.sidebarTab.active() === "threads",
+                      "text-text-weak hover:text-text-base": layout.sidebarTab.active() !== "threads",
+                    }}
+                    onClick={() => layout.sidebarTab.set("threads")}
+                  >
+                    {language.t("sidebar.tab.threads", { default: "Threads" })}
+                  </button>
+                </div>
+              </div>
+
               <div class="flex-1 min-h-0 flex flex-col">
-                <Show
-                  when={workspacesEnabled()}
-                  fallback={
+                <Show when={layout.sidebarTab.active() === "threads"}>
+                  <ThreadsPanel />
+                </Show>
+                <Show when={layout.sidebarTab.active() === "sessions"}>
+                  <Show
+                    when={workspacesEnabled()}
+                    fallback={
+                      <>
+                        <div class="shrink-0 py-4 px-3">
+                          <TooltipKeybind
+                            title={language.t("command.session.new")}
+                            keybind={command.keybind("session.new")}
+                            placement="top"
+                          >
+                            <Button
+                              size="large"
+                              icon="plus-small"
+                              class="w-full"
+                              onClick={() => navigateWithSidebarReset(`/${base64Encode(p().worktree)}/session`)}
+                            >
+                              {language.t("command.session.new")}
+                            </Button>
+                          </TooltipKeybind>
+                        </div>
+                        <div class="flex-1 min-h-0">
+                          <LocalWorkspace
+                            ctx={workspaceSidebarCtx}
+                            project={p()}
+                            sortNow={sortNow}
+                            mobile={panelProps.mobile}
+                          />
+                        </div>
+                      </>
+                    }
+                  >
                     <>
                       <div class="shrink-0 py-4 px-3">
                         <TooltipKeybind
-                          title={language.t("command.session.new")}
-                          keybind={command.keybind("session.new")}
+                          title={language.t("workspace.new")}
+                          keybind={command.keybind("workspace.new")}
                           placement="top"
                         >
-                          <Button
-                            size="large"
-                            icon="plus-small"
-                            class="w-full"
-                            onClick={() => navigateWithSidebarReset(`/${base64Encode(p().worktree)}/session`)}
-                          >
-                            {language.t("command.session.new")}
+                          <Button size="large" icon="plus-small" class="w-full" onClick={() => createWorkspace(p())}>
+                            {language.t("workspace.new")}
                           </Button>
                         </TooltipKeybind>
                       </div>
-                      <div class="flex-1 min-h-0">
-                        <LocalWorkspace
-                          ctx={workspaceSidebarCtx}
-                          project={p()}
-                          sortNow={sortNow}
-                          mobile={panelProps.mobile}
-                        />
+                      <div class="relative flex-1 min-h-0">
+                        <DragDropProvider
+                          onDragStart={handleWorkspaceDragStart}
+                          onDragEnd={handleWorkspaceDragEnd}
+                          onDragOver={handleWorkspaceDragOver}
+                          collisionDetector={closestCenter}
+                        >
+                          <DragDropSensors />
+                          <ConstrainDragXAxis />
+                          <div
+                            ref={(el) => {
+                              if (!panelProps.mobile) scrollContainerRef = el
+                            }}
+                            class="size-full flex flex-col py-2 gap-4 overflow-y-auto no-scrollbar [overflow-anchor:none]"
+                          >
+                            <SortableProvider ids={workspaces()}>
+                              <For each={workspaces()}>
+                                {(directory) => (
+                                  <SortableWorkspace
+                                    ctx={workspaceSidebarCtx}
+                                    directory={directory}
+                                    project={p()}
+                                    sortNow={sortNow}
+                                    mobile={panelProps.mobile}
+                                  />
+                                )}
+                              </For>
+                            </SortableProvider>
+                          </div>
+                          <DragOverlay>
+                            <WorkspaceDragOverlay
+                              sidebarProject={sidebarProject}
+                              activeWorkspace={() => store.activeWorkspace}
+                              workspaceLabel={workspaceLabel}
+                            />
+                          </DragOverlay>
+                        </DragDropProvider>
                       </div>
                     </>
-                  }
-                >
-                  <>
-                    <div class="shrink-0 py-4 px-3">
-                      <TooltipKeybind
-                        title={language.t("workspace.new")}
-                        keybind={command.keybind("workspace.new")}
-                        placement="top"
-                      >
-                        <Button size="large" icon="plus-small" class="w-full" onClick={() => createWorkspace(p())}>
-                          {language.t("workspace.new")}
-                        </Button>
-                      </TooltipKeybind>
-                    </div>
-                    <div class="relative flex-1 min-h-0">
-                      <DragDropProvider
-                        onDragStart={handleWorkspaceDragStart}
-                        onDragEnd={handleWorkspaceDragEnd}
-                        onDragOver={handleWorkspaceDragOver}
-                        collisionDetector={closestCenter}
-                      >
-                        <DragDropSensors />
-                        <ConstrainDragXAxis />
-                        <div
-                          ref={(el) => {
-                            if (!panelProps.mobile) scrollContainerRef = el
-                          }}
-                          class="size-full flex flex-col py-2 gap-4 overflow-y-auto no-scrollbar [overflow-anchor:none]"
-                        >
-                          <SortableProvider ids={workspaces()}>
-                            <For each={workspaces()}>
-                              {(directory) => (
-                                <SortableWorkspace
-                                  ctx={workspaceSidebarCtx}
-                                  directory={directory}
-                                  project={p()}
-                                  sortNow={sortNow}
-                                  mobile={panelProps.mobile}
-                                />
-                              )}
-                            </For>
-                          </SortableProvider>
-                        </div>
-                        <DragOverlay>
-                          <WorkspaceDragOverlay
-                            sidebarProject={sidebarProject}
-                            activeWorkspace={() => store.activeWorkspace}
-                            workspaceLabel={workspaceLabel}
-                          />
-                        </DragOverlay>
-                      </DragDropProvider>
-                    </div>
-                  </>
+                  </Show>
                 </Show>
               </div>
             </>
